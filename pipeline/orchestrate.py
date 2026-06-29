@@ -74,8 +74,13 @@ def run_pipeline(zip_path, name, out_html_path, lib: TrackLibrary,
     report("parsed", plays=int(len(history)), unique_tracks=int(len(keys)))
 
     hits = lib.lookup(keys)
-    misses = [r for r in uniq.itertuples() if r.key not in hits]
-    report("dedup", cached=len(hits), to_score=len(misses))
+    # A record only counts as a real hit if it was successfully scored
+    # (has_lyrics=1). Records cached as unscored (lyrics not found / a past
+    # fetch failure) are retried — lyrics lookups are free, so the cache
+    # self-heals over time instead of permanently caching a miss.
+    scored_hits = {k: v for k, v in hits.items() if v.get("has_lyrics") == 1}
+    misses = [r for r in uniq.itertuples() if r.key not in scored_hits]
+    report("dedup", cached=len(scored_hits), to_score=len(misses))
 
     newly_scored = 0
     for i, row in enumerate(misses, 1):
@@ -108,7 +113,7 @@ def run_pipeline(zip_path, name, out_html_path, lib: TrackLibrary,
         "name": name,
         "plays": results["meta"]["total_plays"],
         "unique_tracks": int(len(keys)),
-        "cached": len(hits),
+        "cached": len(scored_hits),
         "newly_fetched": len(misses),
         "newly_scored": newly_scored,
         "coverage_pct": results["meta"]["coverage_plays_pct"],
