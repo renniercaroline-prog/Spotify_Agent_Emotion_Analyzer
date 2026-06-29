@@ -56,13 +56,19 @@ class JobStore:
         self.c.execute("""CREATE TABLE IF NOT EXISTS jobs(
             id TEXT PRIMARY KEY, email TEXT, name TEXT, status TEXT, stage TEXT,
             token TEXT, error TEXT, created_at REAL, updated_at REAL)""")
+        # migrate: add attempts column to pre-existing DBs
+        try:
+            self.c.execute("ALTER TABLE jobs ADD COLUMN attempts INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
         self.c.commit()
 
     def add(self, jid, email, name):
         with self.lock:
-            self.c.execute("INSERT INTO jobs VALUES(?,?,?,?,?,?,?,?,?)",
-                           (jid, email, name, "queued", "queued", None, None,
-                            time.time(), time.time()))
+            self.c.execute(
+                "INSERT INTO jobs(id,email,name,status,stage,created_at,updated_at,attempts)"
+                " VALUES(?,?,?,?,?,?,?,0)",
+                (jid, email, name, "queued", "queued", time.time(), time.time()))
             self.c.commit()
 
     def update(self, jid, **kw):
@@ -71,6 +77,12 @@ class JobStore:
         with self.lock:
             self.c.execute(f"UPDATE jobs SET {sets} WHERE id=?",
                            [*kw.values(), jid])
+            self.c.commit()
+
+    def bump(self, jid):
+        with self.lock:
+            self.c.execute(
+                "UPDATE jobs SET attempts=COALESCE(attempts,0)+1 WHERE id=?", (jid,))
             self.c.commit()
 
     def get(self, jid):
@@ -85,6 +97,31 @@ class JobStore:
             ).fetchone()
         return dict(r) if r else None
 
+    def recent(self, n=25):
+        with self.lock:
+            rows = self.c.execute(
+                "SELECT id,email,name,status,stage,error,attempts,created_at,updated_at"
+                " FROM jobs ORDER BY created_at DESC LIMIT ?", (n,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def requeue_stale(self, max_attempts=3):
+        """On startup, resume jobs interrupted mid-run (container restart). Give up
+        after max_attempts so a job that keeps crashing doesn't loop forever."""
+        with self.lock:
+            rows = self.c.execute(
+                "SELECT id,attempts FROM jobs WHERE status='running'").fetchall()
+            for r in rows:
+                if (r["attempts"] or 0) >= max_attempts:
+                    self.c.execute(
+                        "UPDATE jobs SET status='failed',stage='failed',"
+                        "error='interrupted repeatedly' WHERE id=?", (r["id"],))
+                else:
+                    self.c.execute(
+                        "UPDATE jobs SET status='queued',stage='requeued' WHERE id=?",
+                        (r["id"],))
+            self.c.commit()
+            return len(rows)
+
 
 _JOBS = JobStore(JOBS_DB)
 
@@ -97,7 +134,12 @@ def _process(job):
     zip_path = os.path.join(UPLOAD_DIR, f"{jid}.zip")
     token = secrets.token_urlsafe(16)
     out_html = os.path.join(RESULT_DIR, f"{token}.html")
+    if not os.path.exists(zip_path):
+        _JOBS.update(jid, status="failed", stage="failed",
+                     error="upload no longer available (server restarted before processing)")
+        return
     try:
+        _JOBS.bump(jid)
         _JOBS.update(jid, status="running", stage="starting")
 
         def progress(stage, **info):
@@ -159,6 +201,9 @@ def _startup():
     global _LIB
     _LIB = get_library()
     print(f"Track library ready: {_LIB.count()} tracks")
+    requeued = _JOBS.requeue_stale()
+    if requeued:
+        print(f"Requeued {requeued} job(s) interrupted by a restart")
     threading.Thread(target=_worker_loop, daemon=True).start()
     threading.Thread(target=_cleanup_loop, daemon=True).start()
 
@@ -304,6 +349,15 @@ async def upload(file: UploadFile = File(...), email: str = Form(...),
         f.write(data)
     _JOBS.add(jid, email.strip(), (name or "").strip())
     return RedirectResponse(f"/status/{jid}", status_code=303)
+
+
+@app.get("/admin/jobs")
+def admin_jobs(key: str = ""):
+    admin = os.getenv("ADMIN_EMAIL")
+    if not admin or key != admin:
+        return JSONResponse({"error": "forbidden"}, status_code=403)
+    return {"now": time.time(), "library_tracks": _LIB.count() if _LIB else 0,
+            "jobs": _JOBS.recent(25)}
 
 
 @app.get("/status/{jid}", response_class=HTMLResponse)
