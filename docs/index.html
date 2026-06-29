@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Music, Your Emotions — GEMS Listening Analysis</title>
+<style>
+  :root{--bg:#0e1117;--panel:#161b22;--line:#2a323d;--text:#e6edf3;--muted:#9aa7b4;--accent:#7c5cff}
+  *{box-sizing:border-box}
+  body{margin:0;background:
+      radial-gradient(900px 500px at 80% -10%, rgba(124,92,255,.18), transparent),
+      radial-gradient(700px 500px at -10% 10%, rgba(72,202,228,.12), transparent), var(--bg);
+    color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6}
+  .wrap{max-width:900px;margin:0 auto;padding:80px 22px}
+  .eyebrow{color:var(--accent);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;font-size:13px}
+  h1{font-size:46px;line-height:1.1;letter-spacing:-1px;margin:10px 0 16px}
+  .lead{font-size:19px;color:var(--muted);max-width:680px}
+  .cta{display:inline-flex;gap:10px;align-items:center;margin-top:28px;flex-wrap:wrap}
+  .btn{display:inline-block;padding:13px 22px;border-radius:10px;font-weight:600;text-decoration:none;font-size:15px}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{background:var(--panel);color:var(--text);border:1px solid var(--line)}
+  .stats{display:flex;gap:14px;flex-wrap:wrap;margin:46px 0 10px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;flex:1;min-width:130px}
+  .stat .n{font-size:28px;font-weight:700}
+  .stat .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  h2{font-size:24px;margin:60px 0 6px}
+  .muted{color:var(--muted)}
+  .findings{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  @media(max-width:720px){.findings{grid-template-columns:1fr}.wrap{padding:54px 18px}h1{font-size:34px}}
+  .f{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:12px;padding:16px 18px;font-size:15px}
+  .f em{font-style:normal;font-weight:700}
+  .how{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+  @media(max-width:720px){.how{grid-template-columns:1fr}}
+  .step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .step .k{color:var(--accent);font-weight:700;font-size:13px}
+  footer{margin-top:64px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:20px}
+  a{color:#9bb7ff}
+  form.signup{display:flex;flex-direction:column;gap:12px;max-width:480px;margin-top:18px;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+  form.signup input[type=email],form.signup input[type=text]{background:#0e1117;color:var(--text);
+    border:1px solid var(--line);border-radius:9px;padding:12px 14px;font-size:15px;width:100%}
+  form.signup .consent{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--muted)}
+  form.signup button{background:var(--accent);color:#fff;border:none;border-radius:9px;
+    padding:13px;font-size:15px;font-weight:700;cursor:pointer}
+  form.signup button:disabled{opacity:.55;cursor:default}
+  .formmsg{margin-top:12px;font-size:14px;min-height:1em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Geneva Emotional Music Scale</div>
+  <h1>The emotional shape of a year in music.</h1>
+  <p class="lead">Upload your Spotify history and we map every track onto 25 distinct
+    emotions from the GEMS framework — then surface the most statistically surprising
+    patterns in <em>how you feel</em> across the day, week, and seasons.</p>
+  <div class="cta">
+    <a class="btn primary" href="dashboard.html">See a live example →</a>
+    <a class="btn ghost" id="makeOwn" href="#make-your-own">Make your own</a>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat"><div class="n">742.6</div><div class="l">Hours analysed</div></div>
+    <div class="stat"><div class="n">14,688</div><div class="l">Plays</div></div>
+    <div class="stat"><div class="n">3,984</div><div class="l">Tracks</div></div>
+    <div class="stat"><div class="n">25</div><div class="l">Emotions scored</div></div>
+  </div>
+
+  <h2>What it finds — a real example</h2>
+  <p class="muted">From “Anna’s” year of listening (2025–2026). Each finding is gated by
+    listening volume and validated with a permutation test.</p>
+  <div class="findings" id="teaser">
+    <div class="f">In <em>October</em>, Anna’s listening ran <em>39% more triumphant</em> than her
+      yearly average <span class="muted">(p&lt;0.001)</span>.</div>
+    <div class="f">Her <em>6–9am</em> listening runs <em>8% more sentimental</em> than usual
+      <span class="muted">(p&lt;0.001)</span>.</div>
+    <div class="f">Her <em>Sunday</em> listening runs <em>14% more joyful</em> than her
+      yearly average <span class="muted">(p&lt;0.001)</span>.</div>
+    <div class="f">Her listening turns <em>8% more inspired in Autumn</em> than the
+      rest of the year <span class="muted">(p&lt;0.001)</span>.</div>
+  </div>
+  <p style="margin-top:18px"><a class="btn ghost" href="dashboard.html">Explore the full interactive dashboard →</a></p>
+
+  <h2 id="make-your-own">Make your own</h2>
+  <div class="how">
+    <div class="step"><div class="k">1 · Request</div>Ask Spotify for your “Account data”
+      (Privacy Settings → Download your data). It arrives as a zip by email.</div>
+    <div class="step"><div class="k">2 · Sign up</div>Drop your email below. We score every
+      track’s lyrics on the 25 GEMS emotions.</div>
+    <div class="step"><div class="k">3 · Get your dashboard</div>We email you a private link
+      to your own interactive emotional year.</div>
+  </div>
+
+  <form class="signup" id="signupForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+    <input type="email" name="email" required placeholder="you@email.com" autocomplete="email">
+    <input type="text" name="defining_song"
+      placeholder="(optional) a song that defined your year">
+    <label class="consent">
+      <input type="checkbox" name="consent" required>
+      <span>Email me when my dashboard is ready. I understand my listening data is treated as
+        personal data.</span>
+    </label>
+    <button type="submit">Notify me →</button>
+    <div class="formmsg muted" id="formMsg"></div>
+  </form>
+  <p class="muted" style="margin-top:10px">Want to see what you’ll get first? Explore
+    <a href="dashboard.html">the live example</a>.</p>
+
+  <footer>
+    GEMS scores are <strong>LLM-derived proxies for each track’s emotional character</strong>,
+    not measured listener feelings. Your listening data and email are treated as personal data.
+    Built on the GEMS framework (Zentner, Grandjean &amp; Scherer, 2008).
+  </footer>
+</div>
+<script>
+  // Smooth-scroll the "Make your own" CTA to the signup form.
+  document.getElementById('makeOwn').addEventListener('click', e=>{
+    e.preventDefault();
+    document.getElementById('signupForm').scrollIntoView({behavior:'smooth'});
+    document.querySelector('#signupForm input[name=email]').focus();
+  });
+
+  // Submit the signup form to Formspree via AJAX (no page reload).
+  const form = document.getElementById('signupForm');
+  const msg = document.getElementById('formMsg');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    if (form.action.includes('YOUR_FORM_ID')) {
+      msg.textContent = '⚠ Form not configured yet — set your Formspree ID in index.html.';
+      msg.style.color = '#f3722c'; return;
+    }
+    const btn = form.querySelector('button');
+    btn.disabled = true; msg.style.color = ''; msg.textContent = 'Sending…';
+    try {
+      const res = await fetch(form.action, {method:'POST', body:new FormData(form),
+        headers:{'Accept':'application/json'}});
+      if (res.ok) {
+        form.reset();
+        msg.style.color = '#48cae4';
+        msg.textContent = '✓ You’re on the list — we’ll be in touch.';
+      } else {
+        const data = await res.json().catch(()=>({}));
+        msg.style.color = '#ff5c5c';
+        msg.textContent = (data.errors && data.errors[0] && data.errors[0].message)
+          || 'Something went wrong. Please try again.';
+      }
+    } catch {
+      msg.style.color = '#ff5c5c';
+      msg.textContent = 'Network error. Please try again.';
+    } finally { btn.disabled = false; }
+  });
+</script>
+</body>
+</html>

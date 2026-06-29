@@ -1,0 +1,8 @@
+# Analysis engine (Part A) — minimal, stdlib + these:
+pandas>=2.0
+numpy>=1.24
+# scipy is optional (not currently required); uncomment if you extend the stats:
+# scipy>=1.10
+
+# Part B scoring pipeline / service deps are declared separately when that part is built
+# (openai, requests/beautifulsoup4 for Genius, fastapi, etc.).

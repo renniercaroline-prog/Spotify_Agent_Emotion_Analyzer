@@ -1,0 +1,49 @@
+# ---- secrets (NEVER commit) ----
+.env
+.env.*
+!.env.example
+
+# ---- personal data / PII (Anna's raw export + derived data) ----
+Spotify Account Data/
+my_spotify_data.zip
+annas_listening_history.csv
+annas_spotify_tracks.csv
+annas_tracks_with_lyrics.csv
+annas_tracks_gems_scored.csv
+
+# ---- large datasets (not needed by the app) ----
+MillionSongSubset/
+millionsongsubset*.tar.gz
+
+# ---- scoring checkpoints / caches ----
+*_checkpoint.json
+gems_scores_checkpoint.json
+lyrics_checkpoint.json
+data/track_library.*
+
+# ---- uploads & generated per-user results (Part B) ----
+uploads/
+results/
+service/uploads/
+service/results/
+
+# ---- internal / unpublished — keep OUT of the public demo repo ----
+The Role of Emotion in Music Popularity Prediction (3).pdf
+CLAUDE_CODE_BUILD_PROMPT.md
+*.ipynb
+
+# ---- transient analysis artifacts (the dashboard inlines its own data) ----
+# NOTE: docs/index.html and docs/dashboard.html ARE committed — they are the
+# public Anna demo (aggregate emotional data for the consented demo subject).
+# Only the loose results JSON and raw per-play data stay out of the repo.
+docs/dashboard_results.json
+docs/results.json
+results.json
+
+# ---- python / os ----
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+.ipynb_checkpoints/
