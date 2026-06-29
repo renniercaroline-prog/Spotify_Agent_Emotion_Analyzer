@@ -69,9 +69,25 @@ measured listener feelings. The raw per-play CSVs, the `Spotify Account Data/` e
 and `.env` are **gitignored**. The committed Anna `dashboard.html` contains only
 aggregate emotional data for the consented demo subject.
 
-## Roadmap (Part B)
+## Part B — the upload → score → email service (built)
 
-New-user scoring pipeline (parse export → Genius lyrics → `gpt-4o-mini` GEMS scoring,
-with a shared scored-track library so each track is only scored once across all users)
-plus an async upload→email web service. Not yet built — see §5 of the build prompt.
-Open decisions in §8 (storage backend, hosting, email provider, retention).
+```
+pipeline/
+  gems.py           # full 45-item GEMS taxonomy + cluster averages (scoring superset)
+  track_library.py  # shared scored-track DB (SQLite); each track scored once, ever
+  parse_export.py   # parse Spotify export zip (basic + extended formats) -> plays
+  lyrics.py         # Genius search + scrape
+  gems_scoring.py   # gpt-4o-mini GEMS scoring (same prompt as the notebook)
+  orchestrate.py    # zip -> dedupe vs library -> score misses -> analyze -> dashboard
+service/
+  app.py            # FastAPI: upload form, background worker, status, results
+  email_send.py     # Resend delivery (console fallback in dev)
+  DEPLOY_SERVICE.md # Railway + Resend deploy guide
+Dockerfile, docker-compose.yml, railway.json, .env.example
+```
+
+Run locally: `cp .env.example .env` (add `OPENAI_API_KEY` + `GENIUS_ACCESS_TOKEN`),
+then `docker compose up --build` and open http://localhost:8000. Deploy: see
+[service/DEPLOY_SERVICE.md](service/DEPLOY_SERVICE.md). The shared track library means
+each unique track is fetched + scored **once across all users**, so API cost trends
+toward zero as the catalog fills in.

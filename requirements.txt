@@ -1,8 +1,14 @@
-# Analysis engine (Part A) — minimal, stdlib + these:
+# Analysis engine (Part A)
 pandas>=2.0
 numpy>=1.24
-# scipy is optional (not currently required); uncomment if you extend the stats:
-# scipy>=1.10
 
-# Part B scoring pipeline / service deps are declared separately when that part is built
-# (openai, requests/beautifulsoup4 for Genius, fastapi, etc.).
+# Pipeline (Part B) — scoring
+openai>=1.30
+requests>=2.31
+beautifulsoup4>=4.12
+
+# Web service (Part B)
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+python-dotenv>=1.0

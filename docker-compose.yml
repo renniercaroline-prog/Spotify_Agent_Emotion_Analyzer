@@ -1,0 +1,19 @@
+# Local end-to-end run: `docker compose up --build` then open http://localhost:8000
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      BASE_URL: "http://localhost:8000"
+      DATA_DIR: "/data"
+      TRACK_DB_PATH: "/data/track_library.db"
+    volumes:
+      - gemsdata:/data
+      # seed the shared library on first run (read-only); remove once seeded
+      - ./annas_tracks_gems_scored.csv:/app/annas_tracks_gems_scored.csv:ro
+
+volumes:
+  gemsdata:

@@ -21,9 +21,14 @@ gems_scores_checkpoint.json
 lyrics_checkpoint.json
 data/track_library.*
 
-# ---- uploads & generated per-user results (Part B) ----
+# ---- Part B runtime data (track DB, jobs, uploads, results) ----
+# data/track_seed.csv (lyrics-stripped head-start seed) MAY be committed; the rest is local.
+data/track_library.db*
+data/jobs.db*
 uploads/
 results/
+data/uploads/
+data/results/
 service/uploads/
 service/results/
 
