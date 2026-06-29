@@ -110,13 +110,19 @@ def _process(job):
 
         summary = run_pipeline(zip_path, name or "You", out_html, _LIB,
                                progress=progress)
+        url = f"{BASE_URL}/r/{token}"
         _JOBS.update(jid, status="done", stage="done", token=token)
-        email_send.send_ready(email, name or "there",
-                              f"{BASE_URL}/r/{token}", summary)
+        email_send.send_ready(email, name or "there", url, summary)
+        admin = os.getenv("ADMIN_EMAIL")
+        if admin:
+            email_send.send_admin(admin, email, "done", url=url, summary=summary)
     except Exception as e:
         traceback.print_exc()
         _JOBS.update(jid, status="failed", stage="failed", error=str(e)[:300])
         email_send.send_failed(email, str(e)[:300])
+        admin = os.getenv("ADMIN_EMAIL")
+        if admin:
+            email_send.send_admin(admin, email, "failed", reason=str(e)[:300])
     finally:
         try:
             os.remove(zip_path)  # retention: delete raw upload after processing
@@ -250,6 +256,7 @@ def healthz():
             "genius_token": bool(os.getenv("GENIUS_ACCESS_TOKEN")),
             "resend_key": bool(os.getenv("RESEND_API_KEY")),
             "from_email": os.getenv("FROM_EMAIL") or None,
+            "admin_email": os.getenv("ADMIN_EMAIL") or None,
             "base_url": os.getenv("BASE_URL") or None,
             "data_dir": DATA_DIR,
         },

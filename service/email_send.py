@@ -55,6 +55,23 @@ def send_ready(to: str, name: str, url: str, summary: dict) -> bool:
     return send_email(to, "Your emotional listening dashboard is ready", html)
 
 
+def send_admin(admin: str, user_email: str, status: str,
+               url: str = None, summary: dict = None, reason: str = None) -> bool:
+    """Send the operator a copy/notification of each run, for quality monitoring."""
+    if status == "done":
+        s = summary or {}
+        body = (f"Dashboard generated for <b>{user_email}</b>.<br><br>"
+                f"plays: {s.get('plays', 0):,} · tracks: {s.get('unique_tracks', 0):,} "
+                f"({s.get('newly_fetched', 0)} new scored) · "
+                f"coverage: {s.get('coverage_pct', '?')}% · "
+                f"findings: {s.get('findings', 0)}")
+        html = _brand_html("New dashboard generated", body, url, "View dashboard")
+        return send_email(admin, f"[GEMS] dashboard for {user_email}", html)
+    body = f"Processing FAILED for <b>{user_email}</b>:<br><br><i>{reason}</i>"
+    html = _brand_html("A dashboard run failed", body)
+    return send_email(admin, f"[GEMS] FAILED for {user_email}", html)
+
+
 def send_failed(to: str, reason: str) -> bool:
     body = (f"We hit a problem processing your Spotify data:<br><br>"
             f"<i>{reason}</i><br><br>Please double-check you uploaded the Spotify "
