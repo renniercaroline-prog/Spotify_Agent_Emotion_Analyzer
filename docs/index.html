@@ -56,8 +56,8 @@
     emotions from the GEMS framework — then surface the most statistically surprising
     patterns in <em>how you feel</em> across the day, week, and seasons.</p>
   <div class="cta">
-    <a class="btn primary" href="dashboard.html">See a live example →</a>
-    <a class="btn ghost" id="makeOwn" href="#make-your-own">Make your own</a>
+    <a class="btn primary" href="https://spotifyagentemotionanalyzer-production.up.railway.app/">Make your own →</a>
+    <a class="btn ghost" href="dashboard.html">See a live example</a>
   </div>
 
   <div class="stats" id="stats">
@@ -86,26 +86,19 @@
   <div class="how">
     <div class="step"><div class="k">1 · Request</div>Ask Spotify for your “Account data”
       (Privacy Settings → Download your data). It arrives as a zip by email.</div>
-    <div class="step"><div class="k">2 · Sign up</div>Drop your email below. We score every
-      track’s lyrics on the 25 GEMS emotions.</div>
+    <div class="step"><div class="k">2 · Upload</div>Upload the zip and enter your email.
+      We score every track’s lyrics on the 25 GEMS emotions.</div>
     <div class="step"><div class="k">3 · Get your dashboard</div>We email you a private link
       to your own interactive emotional year.</div>
   </div>
 
-  <form class="signup" id="signupForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
-    <input type="email" name="email" required placeholder="you@email.com" autocomplete="email">
-    <input type="text" name="defining_song"
-      placeholder="(optional) a song that defined your year">
-    <label class="consent">
-      <input type="checkbox" name="consent" required>
-      <span>Email me when my dashboard is ready. I understand my listening data is treated as
-        personal data.</span>
-    </label>
-    <button type="submit">Notify me →</button>
-    <div class="formmsg muted" id="formMsg"></div>
-  </form>
-  <p class="muted" style="margin-top:10px">Want to see what you’ll get first? Explore
-    <a href="dashboard.html">the live example</a>.</p>
+  <p style="margin-top:20px">
+    <a class="btn primary" href="https://spotifyagentemotionanalyzer-production.up.railway.app/">
+      Upload your Spotify data →</a>
+  </p>
+  <p class="muted" style="margin-top:10px">It can take a while if you have lots of new tracks
+    (we only score songs no one’s scored before) — we’ll email you when it’s ready.
+    Want to see what you’ll get first? Explore <a href="dashboard.html">the live example</a>.</p>
 
   <footer>
     GEMS scores are <strong>LLM-derived proxies for each track’s emotional character</strong>,
@@ -113,43 +106,5 @@
     Built on the GEMS framework (Zentner, Grandjean &amp; Scherer, 2008).
   </footer>
 </div>
-<script>
-  // Smooth-scroll the "Make your own" CTA to the signup form.
-  document.getElementById('makeOwn').addEventListener('click', e=>{
-    e.preventDefault();
-    document.getElementById('signupForm').scrollIntoView({behavior:'smooth'});
-    document.querySelector('#signupForm input[name=email]').focus();
-  });
-
-  // Submit the signup form to Formspree via AJAX (no page reload).
-  const form = document.getElementById('signupForm');
-  const msg = document.getElementById('formMsg');
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    if (form.action.includes('YOUR_FORM_ID')) {
-      msg.textContent = '⚠ Form not configured yet — set your Formspree ID in index.html.';
-      msg.style.color = '#f3722c'; return;
-    }
-    const btn = form.querySelector('button');
-    btn.disabled = true; msg.style.color = ''; msg.textContent = 'Sending…';
-    try {
-      const res = await fetch(form.action, {method:'POST', body:new FormData(form),
-        headers:{'Accept':'application/json'}});
-      if (res.ok) {
-        form.reset();
-        msg.style.color = '#48cae4';
-        msg.textContent = '✓ You’re on the list — we’ll be in touch.';
-      } else {
-        const data = await res.json().catch(()=>({}));
-        msg.style.color = '#ff5c5c';
-        msg.textContent = (data.errors && data.errors[0] && data.errors[0].message)
-          || 'Something went wrong. Please try again.';
-      }
-    } catch {
-      msg.style.color = '#ff5c5c';
-      msg.textContent = 'Network error. Please try again.';
-    } finally { btn.disabled = false; }
-  });
-</script>
 </body>
 </html>
