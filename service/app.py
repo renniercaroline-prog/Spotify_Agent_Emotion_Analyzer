@@ -176,7 +176,12 @@ border:1px solid #2a323d;border-radius:9px;padding:12px;font-size:15px}
 button{margin-top:18px;background:#7c5cff;color:#fff;border:none;border-radius:9px;
 padding:13px 20px;font-size:15px;font-weight:700;cursor:pointer}
 .card{background:#161b22;border:1px solid #2a323d;border-radius:14px;padding:22px;margin-top:18px}
-.muted{color:#9aa7b4;font-size:13px}a{color:#9bb7ff}"""
+.muted{color:#9aa7b4;font-size:13px}a{color:#9bb7ff}
+.howto{background:#161b22;border:1px solid #2a323d;border-radius:14px;padding:18px 22px;margin-top:18px}
+.howto h2{font-size:16px;margin:0 0 10px}
+.howto ol{margin:0;padding-left:20px}
+.howto li{margin:8px 0;font-size:14px}
+.howto .tip{color:#9aa7b4;font-size:13px;margin-top:12px}"""
 
 _UPLOAD_PAGE = f"""<!doctype html><html><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
@@ -185,12 +190,29 @@ _UPLOAD_PAGE = f"""<!doctype html><html><head><meta charset=utf-8>
   <h1>Your emotional year in music</h1>
   <p class=lead>Upload your Spotify data and we'll map every track onto 25 GEMS emotions,
      then email you a private interactive dashboard.</p>
+
+  <div class=howto>
+    <h2>How to get your Spotify data</h2>
+    <ol>
+      <li>On a <b>desktop browser</b>, log in at
+        <a href="https://www.spotify.com" target=_blank rel=noopener>spotify.com</a>.</li>
+      <li>Click your profile (top-right) → <b>Account</b>.</li>
+      <li>Go to <b>Security and privacy</b> → <b>Account privacy</b>.</li>
+      <li>Scroll to <b>Download your data</b>, find <b>Account data</b>, and click
+        <b>Request data</b>.</li>
+      <li><b>Confirm</b> via the email Spotify sends you.</li>
+      <li>Spotify emails you a <b>.zip</b> when it's ready (usually a few days). Download it.</li>
+      <li>Come back here and <b>upload that zip</b> below. 🎧</li>
+    </ol>
+    <p class=tip>Tip: choose <b>Account data</b> (≈1 year of history, ready in days) — not
+      "Extended streaming history," which can take up to 30 days. We accept either.</p>
+  </div>
+
   <div class=card>
     <form action="/upload" method=post enctype="multipart/form-data">
       <label>Your Spotify export (.zip)</label>
       <input type=file name=file accept=".zip" required>
-      <p class=muted>Spotify → Privacy Settings → "Download your data" (Account data).
-         It arrives by email as a zip — upload it here.</p>
+      <p class=muted>Upload the whole zip exactly as Spotify sent it — no need to unzip.</p>
       <label>Your email</label>
       <input type=email name=email placeholder="you@email.com" required>
       <label>Your name (optional)</label>
