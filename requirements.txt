@@ -4,8 +4,7 @@ numpy>=1.24
 
 # Pipeline (Part B) — scoring
 openai>=1.30
-requests>=2.31
-beautifulsoup4>=4.12
+requests>=2.31     # lyrics via LRCLIB / lyrics.ovh (no scraping, no key)
 
 # Web service (Part B)
 fastapi>=0.110

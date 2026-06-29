@@ -38,7 +38,7 @@ def _score_one(row) -> dict:
     """Fetch + score a single missing track; returns a library record."""
     rec = {"key": row.key, "artist": row.artist, "track": row.track,
            "spotify_uri": getattr(row, "spotify_uri", None),
-           "source": "genius+gpt", "model": SCORING_MODEL,
+           "source": "lyricsapi+gpt", "model": SCORING_MODEL,
            "prompt_version": PROMPT_VERSION, "scored_at": time.time(),
            "lyrics": None, "has_lyrics": 0}
     for c in ITEM_COLS + CLUSTER_COLS:

@@ -232,7 +232,28 @@ def home():
 
 @app.get("/healthz")
 def healthz():
-    return {"ok": True, "library_tracks": _LIB.count() if _LIB else 0}
+    scored = 0
+    if _LIB:
+        try:
+            cur = _LIB._conn.execute(
+                "SELECT COUNT(*) AS n FROM tracks WHERE has_lyrics=1")
+            scored = cur.fetchone()["n"]
+        except Exception:
+            pass
+    # report only presence (booleans) of secrets, never their values
+    return {
+        "ok": True,
+        "library_tracks": _LIB.count() if _LIB else 0,
+        "library_scored": scored,
+        "config": {
+            "openai_key": bool(os.getenv("OPENAI_API_KEY")),
+            "genius_token": bool(os.getenv("GENIUS_ACCESS_TOKEN")),
+            "resend_key": bool(os.getenv("RESEND_API_KEY")),
+            "from_email": os.getenv("FROM_EMAIL") or None,
+            "base_url": os.getenv("BASE_URL") or None,
+            "data_dir": DATA_DIR,
+        },
+    }
 
 
 @app.post("/upload")

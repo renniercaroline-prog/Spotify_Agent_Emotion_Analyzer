@@ -1,67 +1,74 @@
-"""Genius lyric retrieval — search then scrape — productionized from the notebook.
+"""Lyric retrieval for GEMS scoring.
 
-Polite rate limiting + retry on 429. Returns clean lyrics text or None.
+Uses server-friendly lyrics APIs that return plain text without scraping:
+  1. LRCLIB  (https://lrclib.net) — free, no key, built for apps, good coverage
+  2. lyrics.ovh fallback           — free, no key
+
+We deliberately do NOT scrape genius.com: its lyric pages are Cloudflare
+bot-protected (HTTP 403 from servers), so scraping is unreliable — especially
+from cloud hosts like Railway.
 """
 from __future__ import annotations
 
-import os
 import re
 import time
+from urllib.parse import quote
 
 import requests
-from bs4 import BeautifulSoup
 
-GENIUS_TOKEN = os.getenv("GENIUS_ACCESS_TOKEN")
-_UA = {"User-Agent": "Mozilla/5.0 (compatible; GEMS-emotion-bot/1.0)"}
+_UA = {"User-Agent": "gems-emotion-app/1.0 (+https://carolinerennier.com)"}
 
 
-def search_genius(artist: str, track: str, _depth=0):
-    """Search Genius for a track; return the best-matching song URL or None."""
-    if not GENIUS_TOKEN:
-        raise RuntimeError("GENIUS_ACCESS_TOKEN not set")
-    resp = requests.get(
-        "https://api.genius.com/search",
-        headers={"Authorization": f"Bearer {GENIUS_TOKEN}"},
-        params={"q": f"{track} {artist}"}, timeout=10)
-    if resp.status_code == 429 and _depth < 3:
-        time.sleep(5)
-        return search_genius(artist, track, _depth + 1)
-    resp.raise_for_status()
-    hits = resp.json().get("response", {}).get("hits", [])
-    if not hits:
+def _clean(text: str | None) -> str | None:
+    if not text:
         return None
-    al = artist.lower()
-    for hit in hits:
-        if al in hit["result"]["primary_artist"]["name"].lower():
-            return hit["result"]["url"]
-    return hits[0]["result"]["url"]
+    text = re.sub(r"\[.*?\]", "", text)        # strip [Verse]/[Chorus] markers
+    text = re.sub(r"\n{3,}", "\n\n", text).strip()
+    return text if len(text) > 50 else None
 
 
-def scrape_lyrics(url: str):
-    """Scrape and clean lyrics from a Genius song page; None if too short/missing."""
+def _from_lrclib(artist: str, track: str):
+    # exact-ish match first
     try:
-        resp = requests.get(url, headers=_UA, timeout=10)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
-        containers = soup.find_all("div", attrs={"data-lyrics-container": "true"})
-        if not containers:
-            return None
-        parts = []
-        for c in containers:
-            for br in c.find_all("br"):
-                br.replace_with("\n")
-            parts.append(c.get_text())
-        lyrics = re.sub(r"\[.*?\]", "", "\n".join(parts)).strip()
-        return lyrics if len(lyrics) > 50 else None
+        r = requests.get("https://lrclib.net/api/get", headers=_UA, timeout=12,
+                         params={"artist_name": artist, "track_name": track})
+        if r.status_code == 200:
+            pl = _clean((r.json() or {}).get("plainLyrics"))
+            if pl:
+                return pl
     except Exception:
-        return None
+        pass
+    # fuzzy search fallback within LRCLIB
+    try:
+        r = requests.get("https://lrclib.net/api/search", headers=_UA, timeout=12,
+                         params={"artist_name": artist, "track_name": track})
+        if r.status_code == 200:
+            for item in (r.json() or [])[:5]:
+                pl = _clean(item.get("plainLyrics"))
+                if pl:
+                    return pl
+    except Exception:
+        pass
+    return None
 
 
-def fetch_lyrics(artist: str, track: str, pause: float = 0.3):
-    """Search + scrape with a small polite pause. Returns lyrics text or None."""
-    url = search_genius(artist, track)
-    if pause:
-        time.sleep(pause)
-    if not url:
-        return None
-    return scrape_lyrics(url)
+def _from_lyrics_ovh(artist: str, track: str):
+    try:
+        r = requests.get(
+            f"https://api.lyrics.ovh/v1/{quote(artist)}/{quote(track)}", timeout=12)
+        if r.status_code == 200:
+            return _clean((r.json() or {}).get("lyrics"))
+    except Exception:
+        pass
+    return None
+
+
+def fetch_lyrics(artist: str, track: str, pause: float = 0.15):
+    """Return plain lyrics text for a track, or None if not found anywhere."""
+    for source in (_from_lrclib, _from_lyrics_ovh):
+        lyrics = source(artist, track)
+        if pause:
+            time.sleep(pause)
+        if lyrics:
+            return lyrics
+    return None

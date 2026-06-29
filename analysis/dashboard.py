@@ -8,10 +8,24 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+
+
+def _json_safe(o):
+    """Recursively replace NaN/Infinity (invalid JSON) with None so the browser's
+    JSON.parse never chokes — happens when a listener has unscored tracks."""
+    if isinstance(o, float):
+        return o if math.isfinite(o) else None
+    if isinstance(o, dict):
+        return {k: _json_safe(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [_json_safe(v) for v in o]
+    return o
 
 
 def build_html(results: dict) -> str:
-    data_json = json.dumps(results, ensure_ascii=False).replace("</", "<\\/")
+    data_json = json.dumps(_json_safe(results), ensure_ascii=False,
+                           allow_nan=False).replace("</", "<\\/")
     return _TEMPLATE.replace("/*__DATA__*/", data_json)
 
 
